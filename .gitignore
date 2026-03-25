@@ -1,0 +1,37 @@
+# Claude Code
+.claude/
+
+# Build output
+build/bin/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependencies
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Data files (local only)
+history.db
+config.yaml
+
+# Wails dev
+frontend/wailsjs/
+
+# Superpowers
+.superpowers/

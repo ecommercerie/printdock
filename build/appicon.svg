@@ -1,0 +1,35 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="128" x2="864" y2="896" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101723"/>
+      <stop offset="0.55" stop-color="#1E2532"/>
+      <stop offset="1" stop-color="#27456D"/>
+    </linearGradient>
+    <linearGradient id="dock" x1="240" y1="580" x2="784" y2="756" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="paperFold" x1="600" y1="184" x2="696" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E7F0FF"/>
+      <stop offset="1" stop-color="#C9DCF9"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="96" y="96" width="832" height="832" rx="176" fill="url(#bg)"/>
+  <circle cx="694" cy="270" r="118" fill="#8CC4FF" fill-opacity="0.16"/>
+  <circle cx="318" cy="760" r="88" fill="#4C84D8" fill-opacity="0.14"/>
+
+  <path d="M240 640C240 597.935 274.093 563.842 316.158 563.842H707.842C749.907 563.842 784 597.935 784 640V723.789C784 765.854 749.907 799.947 707.842 799.947H316.158C274.093 799.947 240 765.854 240 723.789V640Z" fill="#09111C" fill-opacity="0.3"/>
+  <path d="M240 612C240 569.935 274.093 535.842 316.158 535.842H707.842C749.907 535.842 784 569.935 784 612V695.789C784 737.854 749.907 771.947 707.842 771.947H316.158C274.093 771.947 240 737.854 240 695.789V612Z" fill="url(#dock)"/>
+  <rect x="308" y="616" width="408" height="52" rx="26" fill="#112039" fill-opacity="0.42"/>
+  <path d="M284 683C284 660.909 301.909 643 324 643H700C722.091 643 740 660.909 740 683V713C740 735.091 722.091 753 700 753H324C301.909 753 284 735.091 284 713V683Z" fill="#102038" fill-opacity="0.24"/>
+
+  <rect x="340" y="210" width="344" height="438" rx="40" fill="#09111C" fill-opacity="0.24"/>
+  <rect x="340" y="182" width="344" height="438" rx="40" fill="#F8FBFF"/>
+  <path d="M596 182H684V270L596 182Z" fill="url(#paperFold)"/>
+  <path d="M596 182V250C596 261.046 604.954 270 616 270H684" stroke="#D0DDF2" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="398" y="284" width="178" height="24" rx="12" fill="#D6E2F1"/>
+  <rect x="398" y="332" width="228" height="24" rx="12" fill="#D6E2F1"/>
+  <rect x="398" y="380" width="204" height="24" rx="12" fill="#D6E2F1"/>
+  <rect x="398" y="452" width="228" height="96" rx="24" fill="#E8F1FF"/>
+</svg>

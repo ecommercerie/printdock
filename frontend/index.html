@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintDock</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav id="nav">
+        <div class="nav-brand">PrintDock</div>
+        <div class="nav-links">
+            <a href="#dashboard" class="nav-link active">Dashboard</a>
+            <a href="#learning" class="nav-link">
+                Apprentissage
+                <span id="learning-badge" class="badge" style="display:none">0</span>
+            </a>
+            <a href="#history" class="nav-link">Historique</a>
+            <a href="#settings" class="nav-link">Configuration</a>
+            <a href="#logs" class="nav-link">Logs</a>
+        </div>
+        <button id="quit-btn" class="nav-quit" onclick="window.go.main.App.QuitApp()" title="Quitter PrintDock">Quitter</button>
+    </nav>
+    <main id="app"></main>
+    <div id="toast-container"></div>
+    <script src="/app.js"></script>
+    <script src="/pages/dashboard.js"></script>
+    <script src="/pages/settings.js"></script>
+    <script src="/pages/history.js"></script>
+    <script src="/pages/learning.js"></script>
+    <script src="/pages/logs.js"></script>
+</body>
+</html>
