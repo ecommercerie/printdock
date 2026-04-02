@@ -69,6 +69,11 @@ func Open(path string) (*DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("history.Open: %w", err)
 	}
+	// Set busy timeout to avoid SQLITE_BUSY on concurrent access
+	if _, err := sqldb.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+		sqldb.Close()
+		return nil, fmt.Errorf("history.Open pragma: %w", err)
+	}
 	if _, err := sqldb.Exec(schema); err != nil {
 		sqldb.Close()
 		return nil, fmt.Errorf("history.Open schema: %w", err)
