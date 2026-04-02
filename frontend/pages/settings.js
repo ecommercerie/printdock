@@ -187,6 +187,29 @@ registerPage('#settings', function(app) {
     notifSoundGroup.appendChild(notifSoundLabel);
     generalSection.appendChild(notifSoundGroup);
 
+    // Rescan on startup
+    const rescanGroup = document.createElement('div');
+    rescanGroup.className = 'form-group';
+    rescanGroup.style.display = 'flex';
+    rescanGroup.style.alignItems = 'center';
+    rescanGroup.style.gap = '12px';
+
+    const rescanCheckbox = document.createElement('input');
+    rescanCheckbox.type = 'checkbox';
+    rescanCheckbox.id = 'rescan-on-startup-checkbox';
+    rescanCheckbox.style.width = '18px';
+    rescanCheckbox.style.height = '18px';
+    rescanCheckbox.style.cursor = 'pointer';
+    rescanGroup.appendChild(rescanCheckbox);
+
+    const rescanLabel = document.createElement('label');
+    rescanLabel.htmlFor = 'rescan-on-startup-checkbox';
+    rescanLabel.style.cursor = 'pointer';
+    rescanLabel.style.margin = '0';
+    rescanLabel.textContent = 'Scanner les fichiers existants au démarrage';
+    rescanGroup.appendChild(rescanLabel);
+    generalSection.appendChild(rescanGroup);
+
     // Webhook URL
     const webhookGroup = document.createElement('div');
     webhookGroup.className = 'form-group';
@@ -305,6 +328,7 @@ registerPage('#settings', function(app) {
             autoCleanupDays: parseInt(cleanupInput.value) || 0,
             keepOriginal: keepOriginalCheckbox.checked,
             notificationSound: notifSoundCheckbox.checked,
+            rescanOnStartup: rescanCheckbox.checked,
             webhookUrl: webhookInput.value,
             extraWatchDirs: extraWatchTextarea.value.split('\n').map(s => s.trim()).filter(s => s.length > 0),
             allowedPrinters: allChecked ? [] : checkedPrinters
@@ -331,6 +355,7 @@ registerPage('#settings', function(app) {
             cleanupInput.value = config.autoCleanupDays || 0;
             keepOriginalCheckbox.checked = !!config.keepOriginal;
             notifSoundCheckbox.checked = !!config.notificationSound;
+            rescanCheckbox.checked = !!config.rescanOnStartup;
             webhookInput.value = config.webhookUrl || '';
             extraWatchTextarea.value = (config.extraWatchDirs || []).join('\n');
         }

@@ -174,7 +174,19 @@ func (a *App) startup(ctx context.Context) {
 		a.startWatcher(a.cfg.WatchDir)
 	}
 
-	// 13b. Start extra watchers
+	// 13b. Rescan existing files if configured
+	if a.cfg.RescanOnStartup && a.wtch != nil {
+		go func() {
+			count, err := a.wtch.ScanExisting()
+			if err != nil {
+				a.appLog.Warn("Rescan error: %v", err)
+			} else if count > 0 {
+				a.appLog.Info("Rescan: %d fichier(s) existant(s) envoyé(s) au traitement", count)
+			}
+		}()
+	}
+
+	// 13c. Start extra watchers
 	for _, dir := range a.cfg.ExtraWatchDirs {
 		if dir != "" {
 			a.startExtraWatcher(dir)

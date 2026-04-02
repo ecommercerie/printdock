@@ -19,6 +19,7 @@ type Watcher struct {
 	stop           chan struct{}
 	mu             sync.Mutex
 	running        bool
+	seen           sync.Map // tracks paths already sent to fileChan
 }
 
 func New(dir string, fileChan chan string, stabilityDelaySeconds int) (*Watcher, error) {
@@ -66,10 +67,15 @@ func (w *Watcher) Start() error {
 }
 
 func (w *Watcher) waitForStability(path string) {
+	// Deduplicate: if another goroutine is already handling this path, skip
+	if _, loaded := w.seen.LoadOrStore(path, true); loaded {
+		return
+	}
 	var lastSize int64 = -1
 	for {
 		info, err := os.Stat(path)
 		if err != nil {
+			w.seen.Delete(path)
 			return
 		}
 		size := info.Size()
@@ -96,4 +102,28 @@ func (w *Watcher) IsRunning() bool {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return w.running
+}
+
+// ScanExisting scans the watched directory for existing PDF files and sends them to fileChan.
+func (w *Watcher) ScanExisting() (int, error) {
+	entries, err := os.ReadDir(w.dir)
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if strings.ToLower(filepath.Ext(e.Name())) != ".pdf" {
+			continue
+		}
+		path := filepath.Join(w.dir, e.Name())
+		if _, loaded := w.seen.LoadOrStore(path, true); loaded {
+			continue
+		}
+		w.fileChan <- path
+		count++
+	}
+	return count, nil
 }

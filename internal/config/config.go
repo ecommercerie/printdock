@@ -16,6 +16,7 @@ type Config struct {
 	NotificationSound     bool   `yaml:"notification_sound" json:"notificationSound"` // play sound on learning
 	ExtraWatchDirs        []string `yaml:"extra_watch_dirs" json:"extraWatchDirs"`     // additional watch folders
 	AllowedPrinters       []string `yaml:"allowed_printers" json:"allowedPrinters"`   // restrict printer list (empty = all)
+	RescanOnStartup       bool     `yaml:"rescan_on_startup" json:"rescanOnStartup"` // scan existing PDFs on startup
 }
 
 func Load(path string) (Config, error) {
