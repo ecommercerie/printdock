@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"os"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -12,6 +13,28 @@ import (
 var assets embed.FS
 
 func main() {
+	// Handle --install flag (running elevated to perform installation)
+	if len(os.Args) > 1 && os.Args[1] == "--install" {
+		if err := selfInstall(); err != nil {
+			showInstallError(err.Error())
+			os.Exit(1)
+		}
+		showInstallSuccess()
+		relaunchInstalled()
+		os.Exit(0)
+	}
+
+	// First launch: not installed yet — ask user
+	if needsInstall() {
+		if showInstallDialog() {
+			if err := runElevated(); err != nil {
+				showInstallError(err.Error())
+			}
+			os.Exit(0)
+		}
+		// User declined install — run from current location anyway
+	}
+
 	if !acquireSingleInstance() {
 		// Another instance is running — it was signaled to show its window.
 		return

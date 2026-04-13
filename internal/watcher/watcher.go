@@ -50,7 +50,8 @@ func (w *Watcher) Start() error {
 			if !ok {
 				return nil
 			}
-			if event.Op&fsnotify.Create == fsnotify.Create {
+			// Handle Create, Rename (move into dir), and Write (overwrite)
+			if event.Op&(fsnotify.Create|fsnotify.Rename|fsnotify.Write) != 0 {
 				if strings.ToLower(filepath.Ext(event.Name)) == ".pdf" {
 					go w.waitForStability(event.Name)
 				}
@@ -72,15 +73,25 @@ func (w *Watcher) waitForStability(path string) {
 		return
 	}
 	var lastSize int64 = -1
+	statErrors := 0
 	for {
 		info, err := os.Stat(path)
 		if err != nil {
-			w.seen.Delete(path)
-			return
+			statErrors++
+			if statErrors >= 3 {
+				log.Printf("[watcher] file inaccessible after %d retries, skipping: %s (%v)", statErrors, path, err)
+				w.seen.Delete(path)
+				return
+			}
+			time.Sleep(w.stabilityDelay)
+			continue
 		}
+		statErrors = 0
 		size := info.Size()
 		if size == lastSize {
 			w.fileChan <- path
+			// Clean up seen entry so the same filename can be detected again later
+			w.seen.Delete(path)
 			return
 		}
 		lastSize = size
@@ -123,6 +134,7 @@ func (w *Watcher) ScanExisting() (int, error) {
 			continue
 		}
 		w.fileChan <- path
+		w.seen.Delete(path)
 		count++
 	}
 	return count, nil

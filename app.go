@@ -88,16 +88,9 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	// 1. Determine data directory (executable's directory or cwd)
-	dataDir := ""
-	if exe, err := os.Executable(); err == nil {
-		dataDir = filepath.Dir(exe)
-	}
-	if dataDir == "" {
-		if cwd, err := os.Getwd(); err == nil {
-			dataDir = cwd
-		}
-	}
+	// 1. Determine data directory (%APPDATA%\PrintDock on Windows, ~/.printdock on Linux)
+	dataDir := getDataDir()
+	os.MkdirAll(dataDir, 0755)
 
 	// 2. Set paths
 	a.configPath = filepath.Join(dataDir, "config.yaml")
