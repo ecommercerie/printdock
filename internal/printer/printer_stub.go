@@ -33,4 +33,8 @@ func (p *StubPrinter) DownloadSumatra() error {
 	return nil
 }
 
+func (p *StubPrinter) GetSumatraStatus() SumatraStatus {
+	return SumatraStatus{Installed: true, CurrentVersion: "3.5.2", LatestVersion: "3.5.2"}
+}
+
 func (p *StubPrinter) Close() error { return nil }

@@ -88,6 +88,13 @@ html, body {
     border-color: var(--color-danger);
 }
 
+.nav-version {
+    font-size: 11px;
+    color: var(--color-nav-text);
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
 .nav-link {
     display: inline-flex;
     align-items: center;

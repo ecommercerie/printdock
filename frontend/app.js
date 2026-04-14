@@ -33,4 +33,12 @@ window.addEventListener('DOMContentLoaded', function() {
     window.runtime.EventsOn('navigate:learning', function() {
         window.location.hash = '#learning';
     });
+    // Display version in navbar
+    (async () => {
+        try {
+            const version = await window.go.main.App.GetVersion();
+            const el = document.getElementById('app-version');
+            if (el && version) el.textContent = 'v' + version;
+        } catch(e) {}
+    })();
 });

@@ -37,7 +37,6 @@ registerPage('#dashboard', function(app) {
     const sumatraText = document.createElement('span');
     sumatraText.style.fontSize = '13px';
     sumatraText.style.color = '#92400e';
-    sumatraText.textContent = 'SumatraPDF non trouvé — nécessaire pour imprimer. ';
     sumatraBanner.appendChild(sumatraText);
 
     const sumatraBtn = document.createElement('button');
@@ -46,14 +45,13 @@ registerPage('#dashboard', function(app) {
     sumatraBtn.style.color = '#fff';
     sumatraBtn.style.border = 'none';
     sumatraBtn.style.flexShrink = '0';
-    sumatraBtn.textContent = 'Télécharger SumatraPDF';
     sumatraBtn.onclick = async () => {
         sumatraBtn.disabled = true;
         sumatraBtn.textContent = 'Téléchargement...';
         try {
             await window.go.main.App.DownloadSumatra();
             sumatraBanner.style.display = 'none';
-            showToast('SumatraPDF installé avec succès', 'success');
+            showToast('SumatraPDF installé/mis à jour avec succès', 'success');
         } catch(e) {
             showToast('Erreur: ' + e, 'error');
             sumatraBtn.textContent = 'Réessayer';
@@ -66,9 +64,65 @@ registerPage('#dashboard', function(app) {
     // Check SumatraPDF on load
     (async () => {
         try {
-            const installed = await window.go.main.App.IsSumatraInstalled();
-            if (!installed) {
+            const status = await window.go.main.App.GetSumatraStatus();
+            if (!status.installed) {
+                sumatraText.textContent = 'SumatraPDF non trouvé — nécessaire pour imprimer.';
+                sumatraBtn.textContent = 'Télécharger SumatraPDF';
                 sumatraBanner.style.display = 'flex';
+            } else if (status.updateAvailable) {
+                sumatraText.textContent = 'SumatraPDF ' + status.currentVersion + ' — mise à jour disponible (v' + status.latestVersion + ')';
+                sumatraBtn.textContent = 'Mettre à jour';
+                sumatraBanner.style.display = 'flex';
+            }
+        } catch(e) {}
+    })();
+
+    // ===== PrintDock Update Banner =====
+    const updateBanner = document.createElement('div');
+    updateBanner.className = 'card';
+    updateBanner.style.display = 'none';
+    updateBanner.style.background = '#dbeafe';
+    updateBanner.style.border = '1px solid #3b82f6';
+    updateBanner.style.marginBottom = '16px';
+    updateBanner.style.padding = '12px 16px';
+    updateBanner.style.alignItems = 'center';
+    updateBanner.style.justifyContent = 'space-between';
+    updateBanner.style.gap = '12px';
+
+    const updateText = document.createElement('span');
+    updateText.style.fontSize = '13px';
+    updateText.style.color = '#1e40af';
+    updateBanner.appendChild(updateText);
+
+    const updateBtn = document.createElement('button');
+    updateBtn.className = 'btn btn-sm';
+    updateBtn.style.background = '#3b82f6';
+    updateBtn.style.color = '#fff';
+    updateBtn.style.border = 'none';
+    updateBtn.style.flexShrink = '0';
+    updateBtn.textContent = 'Mettre à jour';
+    updateBtn.onclick = async () => {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Mise à jour...';
+        try {
+            await window.go.main.App.ApplyUpdate();
+            showToast('Mise à jour téléchargée, redémarrage...', 'success');
+        } catch(e) {
+            showToast('Erreur: ' + e, 'error');
+            updateBtn.textContent = 'Réessayer';
+            updateBtn.disabled = false;
+        }
+    };
+    updateBanner.appendChild(updateBtn);
+    page.appendChild(updateBanner);
+
+    // Check for PrintDock update
+    (async () => {
+        try {
+            const status = await window.go.main.App.CheckForUpdate();
+            if (status.updateAvailable) {
+                updateText.textContent = 'PrintDock v' + status.currentVersion + ' — nouvelle version disponible (v' + status.latestVersion + ')';
+                updateBanner.style.display = 'flex';
             }
         } catch(e) {}
     })();

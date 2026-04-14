@@ -19,7 +19,6 @@ func main() {
 			showInstallError(err.Error())
 			os.Exit(1)
 		}
-		showInstallSuccess()
 		relaunchInstalled()
 		os.Exit(0)
 	}

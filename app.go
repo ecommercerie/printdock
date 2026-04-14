@@ -23,6 +23,7 @@ import (
 	"printdock/internal/printer"
 	"printdock/internal/processor"
 	"printdock/internal/rules"
+	"printdock/internal/updater"
 	"printdock/internal/watcher"
 )
 
@@ -1068,6 +1069,14 @@ func (a *App) IsSumatraInstalled() bool {
 	return a.pr.IsSumatraInstalled()
 }
 
+// GetSumatraStatus returns the current SumatraPDF installation status and version info.
+func (a *App) GetSumatraStatus() printer.SumatraStatus {
+	if a.pr == nil {
+		return printer.SumatraStatus{}
+	}
+	return a.pr.GetSumatraStatus()
+}
+
 // DownloadSumatra downloads SumatraPDF to the application directory.
 func (a *App) DownloadSumatra() error {
 	if a.pr == nil {
@@ -1079,5 +1088,41 @@ func (a *App) DownloadSumatra() error {
 		return err
 	}
 	a.appLog.Info("SumatraPDF downloaded successfully")
+	return nil
+}
+
+// ─── App Update ─────────────────────────────────────────────────────────────
+
+// GetVersion returns the current application version.
+func (a *App) GetVersion() string {
+	return Version
+}
+
+// CheckForUpdate checks GitHub for a newer version of PrintDock.
+func (a *App) CheckForUpdate() updater.UpdateStatus {
+	return updater.Check(Version)
+}
+
+// ApplyUpdate downloads and installs the latest version, then restarts the app.
+func (a *App) ApplyUpdate() error {
+	a.appLog.Info("Checking for update...")
+	status := updater.Check(Version)
+	if !status.UpdateAvail {
+		return fmt.Errorf("already up to date")
+	}
+	if status.DownloadURL == "" {
+		return fmt.Errorf("no download URL found for this platform")
+	}
+	a.appLog.Info("Downloading update v%s...", status.LatestVersion)
+	if err := applyUpdate(status); err != nil {
+		a.appLog.Error("Update failed: %v", err)
+		return err
+	}
+	a.appLog.Info("Update downloaded, restarting...")
+	// Quit the app so the update script can replace the exe
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		a.QuitApp()
+	}()
 	return nil
 }

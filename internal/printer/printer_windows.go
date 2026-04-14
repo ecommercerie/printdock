@@ -4,22 +4,27 @@ package printer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
 )
 
 const (
-	sumatraURL      = "https://www.sumatrapdfreader.org/dl/rel/3.5.2/SumatraPDF-3.5.2-64.exe"
-	sumatraExeName  = "SumatraPDF.exe"
-	downloadTimeout = 120 * time.Second
-	printTimeout    = 120 * time.Second
+	sumatraExeName       = "SumatraPDF.exe"
+	sumatraGitHubAPI     = "https://api.github.com/repos/nicehash/SumatraPDF/releases/latest"
+	sumatraDownloadTpl   = "https://www.sumatrapdfreader.org/dl/rel/%s/SumatraPDF-%s-64.exe"
+	sumatraFallbackVer   = "3.5.2"
+	downloadTimeout      = 120 * time.Second
+	printTimeout         = 120 * time.Second
+	versionCheckTimeout  = 10 * time.Second
 )
 
 type WindowsPrinter struct {
@@ -75,13 +80,87 @@ func (p *WindowsPrinter) IsSumatraInstalled() bool {
 	return err == nil
 }
 
+// getLocalSumatraVersion returns the version of the installed SumatraPDF binary.
+func (p *WindowsPrinter) getLocalSumatraVersion() string {
+	if !p.IsSumatraInstalled() {
+		return ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, p.sumatraExe, "-version")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	// Output is like "SumatraPDF 3.5.2" or "SumatraPDF 3.5.2 64-bit"
+	line := strings.TrimSpace(string(out))
+	line = strings.TrimPrefix(line, "SumatraPDF ")
+	if i := strings.IndexByte(line, ' '); i > 0 {
+		line = line[:i]
+	}
+	return line
+}
+
+// fetchLatestSumatraVersion queries GitHub for the latest SumatraPDF release tag.
+func fetchLatestSumatraVersion() string {
+	ctx, cancel := context.WithTimeout(context.Background(), versionCheckTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sumatraGitHubAPI, nil)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return ""
+	}
+	var release struct {
+		TagName string `json:"tag_name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return ""
+	}
+	// Tag is like "v3.5.2" or "3.5.2"
+	return strings.TrimPrefix(release.TagName, "v")
+}
+
+func (p *WindowsPrinter) GetSumatraStatus() SumatraStatus {
+	st := SumatraStatus{
+		Installed: p.IsSumatraInstalled(),
+	}
+	if st.Installed {
+		st.CurrentVersion = p.getLocalSumatraVersion()
+	}
+	st.LatestVersion = fetchLatestSumatraVersion()
+	if st.LatestVersion == "" {
+		st.LatestVersion = sumatraFallbackVer
+	}
+	if st.Installed && st.CurrentVersion != "" && st.LatestVersion != "" {
+		st.UpdateAvail = st.CurrentVersion != st.LatestVersion
+	} else if !st.Installed {
+		st.UpdateAvail = false
+	}
+	return st
+}
+
 func (p *WindowsPrinter) DownloadSumatra() error {
+	// Determine which version to download
+	version := fetchLatestSumatraVersion()
+	if version == "" {
+		version = sumatraFallbackVer
+	}
+	downloadURL := fmt.Sprintf(sumatraDownloadTpl, version, version)
 	destPath := filepath.Join(p.dataDir, sumatraExeName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), downloadTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sumatraURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"printdock/internal/archiver"
 	"printdock/internal/classifier"
 	"printdock/internal/history"
+	"printdock/internal/printer"
 	"printdock/internal/rules"
 )
 
@@ -26,6 +27,9 @@ func (m *mockPrinter) IsOnline(printerName string) bool  { return true }
 func (m *mockPrinter) TestPrint(printerName string) error { return nil }
 func (m *mockPrinter) IsSumatraInstalled() bool           { return true }
 func (m *mockPrinter) DownloadSumatra() error             { return nil }
+func (m *mockPrinter) GetSumatraStatus() printer.SumatraStatus {
+	return printer.SumatraStatus{Installed: true, CurrentVersion: "3.5.2", LatestVersion: "3.5.2"}
+}
 func (m *mockPrinter) Close() error                       { return nil }
 
 // setupTest creates all dependencies backed by a temp directory and returns
