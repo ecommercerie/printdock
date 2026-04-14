@@ -5,15 +5,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"syscall"
+	"unsafe"
 
 	"printdock/internal/updater"
 )
 
 // applyUpdate downloads the new exe, writes a batch script that waits for
 // this process to exit, replaces the exe, and restarts it.
+// The script is launched elevated (UAC) since Program Files requires admin.
 func applyUpdate(status updater.UpdateStatus) error {
 	if status.DownloadURL == "" {
 		return fmt.Errorf("no download URL available")
@@ -32,26 +33,38 @@ func applyUpdate(status updater.UpdateStatus) error {
 
 	// Write a batch script that:
 	// 1. Waits for the current process to exit
-	// 2. Replaces the exe
-	// 3. Restarts PrintDock
-	// 4. Cleans up the batch file
+	// 2. Replaces the exe (needs admin for Program Files)
+	// 3. Restarts PrintDock (as normal user)
+	// 4. Cleans up the batch file and temp exe
 	batPath := filepath.Join(os.TempDir(), "printdock-update.bat")
 	batContent := fmt.Sprintf(`@echo off
-timeout /t 2 /nobreak >nul
+timeout /t 3 /nobreak >nul
 copy /y "%s" "%s" >nul
+del "%s" >nul
 start "" "%s"
 del "%%~f0"
-`, tmpExe, currentExe, currentExe)
+`, tmpExe, currentExe, tmpExe, currentExe)
 
 	if err := os.WriteFile(batPath, []byte(batContent), 0644); err != nil {
 		return fmt.Errorf("write update script: %w", err)
 	}
 
-	// Launch the batch script hidden
-	cmd := exec.Command("cmd", "/C", batPath)
-	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("start update script: %w", err)
+	// Launch the batch script elevated via ShellExecuteW("runas")
+	verb, _ := syscall.UTF16PtrFromString("runas")
+	exe, _ := syscall.UTF16PtrFromString("cmd")
+	args, _ := syscall.UTF16PtrFromString("/C \"" + batPath + "\"")
+
+	shellExecute := shell32.NewProc("ShellExecuteW")
+	ret, _, _ := shellExecute.Call(
+		0,
+		uintptr(unsafe.Pointer(verb)),
+		uintptr(unsafe.Pointer(exe)),
+		uintptr(unsafe.Pointer(args)),
+		0,
+		0, // SW_HIDE
+	)
+	if ret <= 32 {
+		return fmt.Errorf("failed to launch elevated update script (code %d)", ret)
 	}
 
 	return nil
