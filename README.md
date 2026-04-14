@@ -17,7 +17,7 @@ Smart print routing agent for Windows. Watches a folder for PDFs, classifies the
 
 ## Screenshots
 
-*Coming soon*
+![PrintDock Dashboard](screenshot.png)
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Watcher (fsnotify) --> Processor (workers)
 
 ## Installation
 
-Download the latest `printdock.exe` from the [Releases](https://github.com/printdock/printdock/releases) page and run it. No installation required — it's a single executable.
+Download the latest `printdock.exe` from the [Releases](https://github.com/ecommercerie/printdock/releases) page and run it. On first launch, PrintDock will propose to install itself in `C:\Program Files\PrintDock` with Desktop and Start Menu shortcuts.
 
 ## Configuration
 
